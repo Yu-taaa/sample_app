@@ -8,8 +8,16 @@
   <body>
     <%= render 'layouts/header' %>
     <div class="container">
+      <% flash.each do |message_type, message| %>
+      <%# 第一引数のmessage_typeは、flash[:success] = "Welcome to the Sample App!" のキー %>
+      <%# 第一引数のmessageは、flash[:success] = "Welcome to the Sample App!" のバリュー %>
+      <%# content_tag（出力したいタグ,表示させたい内容 , クラス名（変数展開も出来る）） %>
+        <%= content_tag(:div, message, class: "alert alert-#{message_type}") %>
+      <% end %>
       <%= yield %>
       <%= render 'layouts/footer' %>
+      <%= debug(params) if Rails.env.development? %>
+      <%# railsの環境が開発環境ならば、デバッグを表示する %>
     </div>
   </body>
 </html>
