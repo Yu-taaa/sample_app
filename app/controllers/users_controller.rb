@@ -12,6 +12,8 @@ class UsersController < ApplicationController
     @user = User.new(user_params)
     if @user.save
       flash[:success] = "Welcome to the Sample App!"
+      # sessions_helperで定義したlog_inメソッド
+      log_in @user
       # edirect_to @userというコードから（Railsエンジニアが）user_url(@user)といったコードを
       # 実行したいということを、Railsが推察してくれた結果になる
       redirect_to @user
