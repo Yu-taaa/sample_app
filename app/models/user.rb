@@ -1,4 +1,6 @@
 class User < ApplicationRecord
+  # remember_token属性をUserクラスに定義
+  attr_accessor :remember_token
   # Userクラスのインスタンのsaveの直前に現在のユーザーのemailにemailを小文字にしたものを代入
   # Userモデルの中ではself.email = self.email.downcaseの右側のselfは省略できる
   before_save { email.downcase! }
@@ -29,5 +31,35 @@ class User < ApplicationRecord
     # secure_passwordのソースコードのパスワード生成部分
     # string→ハッシュ化する文字列 cost→ハッシュを算出するための計算コスト                                              
     BCrypt::Password.create(string, cost: cost)
+  end
+
+  # ランダムなトークンを返す
+  # Userのインスタンスは不要なので、クラスメソッドとして作成する
+  def User.new_token
+    # コンソールで確認可
+    # A–Z、a–z、0–9、"-"、"_"のいずれかの文字（64種類）からなる長さ22のランダムな文字列を返すメソッド
+    SecureRandom.urlsafe_base64
+  end
+
+   # 永続セッションのためにユーザーをデータベースに記憶する
+  def remember
+    #（selfを付けるとクラス変数になる→この場合User.remember_tokenと同意）
+    # これにより、ユーザーのremember_token属性に要素を代入
+    self.remember_token = User.new_token
+    # update_attributeメソッドは検証を素通りする
+    # パスワード確認ができないので、検証を素通りさせる必要がある
+    # validationを無視して更新（:remember_digest属性にハッシュ化したremember_tokenを設定）
+    update_attribute(:remember_digest, User.digest(remember_token))
+  end
+
+  # 渡されたトークンがダイジェストと一致したらtrueを返す
+  def authenticated?(remember_token)
+    return false if remember_digest.nil?
+    BCrypt::Password.new(remember_digest).is_password?(remember_token)
+  end
+
+  # ユーザーのログイン情報を破棄する
+  def forget
+    update_attribute(:remember_digest, nil)
   end
 end

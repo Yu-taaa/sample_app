@@ -85,4 +85,8 @@ class UserTest < ActiveSupport::TestCase
     #@user.password = @user.password_confirmationにaを5個代入した時
     #@userは有効か → Falseであると言うテスト
   end
+
+  test "authenticated? should return false for a user with nil digest" do
+    assert_not @user.authenticated?('')
+  end
 end
