@@ -19,8 +19,9 @@ class SessionsController < ApplicationController
       #   forget(user)
       # end
       params[:session][:remember_me] == '1' ? remember(@user) : forget(@user)
-       #「redirect_to user」は、「redirect_to user_url(user)」と同意
-      redirect_to @user
+      #「redirect_to user」は、「redirect_to user_url(user)」と同意
+      #SessionsHelperで定義したredirect_back_orメソッドを呼び出してリダイレクト先を定義
+      redirect_back_or @user
     else
       #flash.now のメッセージはその後リクエストが発生したときに消滅する
       #flash[:hoge] のメッセージはその後リクエストが発生しても消滅しない

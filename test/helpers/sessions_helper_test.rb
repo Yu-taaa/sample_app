@@ -23,4 +23,6 @@ class SessionsHelperTest < ActionView::TestCase
     # current_userがnilの時true
     assert_nil current_user
   end
+
+  
 end

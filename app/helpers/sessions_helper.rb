@@ -46,6 +46,11 @@ module SessionsHelper
     # end
   end
 
+  # 渡されたユーザーがカレントユーザーであればtrueを返す
+  def current_user?(user)
+    user && user == current_user
+  end
+
   # ユーザーがログインしていればtrue、その他ならfalseを返す
   def logged_in?
     !current_user.nil?
@@ -64,6 +69,23 @@ module SessionsHelper
     session.delete(:user_id)
     @current_user = nil
   end
+  # log_outメソッド→forger(user)メソッド→user.forgetメソッドの呼び出し
+
+  # 記憶したURL (もしくはデフォルト値) にリダイレクト
+  def redirect_back_or(default)
+  # リダイレクト（session[:forwarding_url]の値へ、値がnilならデフォルト値へ)
+  redirect_to(session[:forwarding_url] || default)
+  # session変数の:forwarding_urlキーの値をdelete
+  session.delete(:forwarding_url)
+  end
+
+  # アクセスしようとしたURLを覚えておく
+  def store_location
+    # session変数の:forwarding_urlキーに格納 request.original_urlで取得したリクエスト先urlにGETリクエストが送られたときのみ
+    # getリクエストの時のみにすることで、例えばログインしていないユーザーがフォームを使って送信した場合、転送先のURLを保存させないようにできる
+    # 上記は稀だが、例えばユーザがセッション用のcookieを手動で削除してフォームから送信するケースで起こる
+    session[:forwarding_url] = request.original_url if request.get?
+  end
 end
 
-# log_outメソッド→forger(user)メソッド→user.forgetメソッドの呼び出し
+

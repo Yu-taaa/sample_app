@@ -17,9 +17,11 @@ class User < ApplicationRecord
   validates :email, presence: true, length: { maximum: 255 },
                     format: { with: VALID_EMAIL_REGEX },
                     uniqueness: { case_sensitive: false }
-  # bcryptパスワードを作成する
+  # bcryptパスワードを作成する（新しくレコードが追加されたときだけに適用されるメソッド）
   has_secure_password
-  validates :password, presence: true, length: { minimum: 6 }
+  # allow_nil: true で空のパスワードを有効にしているが、
+  # has_secure_passwordではオブジェクト生成時に存在性を検証するようになっているため、空のパスワード（nil）が新規ユーザー登録時に有効になることはない
+  validates :password, presence: true, length: { minimum: 6 }, allow_nil: true
 
   # 渡された文字列のハッシュ値を返す
   # fixture向け（テスト用データ）のdigestメソッドを追加
