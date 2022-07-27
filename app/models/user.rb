@@ -1,7 +1,7 @@
 class User < ApplicationRecord
   # 実際にDBにはない、仮の属性の読み取りと書き込みをするときによく使う ※DB関係なく使うこともある
   # remember_token属性をUserクラスに定義
-  attr_accessor :remember_token, :activation_token
+  attr_accessor :remember_token, :activation_token, :reset_token
   before_save   :downcase_email
   before_create :create_activation_digest
   
@@ -105,6 +105,24 @@ class User < ApplicationRecord
     UserMailer.account_activation(self).deliver_now
   end
   
+  # パスワード再設定の属性を設定する
+  def create_reset_digest
+   # （呼び出し先で考えると）@userのreset_tokenに代入→User.new_token
+   self.reset_token = User.new_token
+   # 指定のカラムを指定の値に、DBに直接上書き保存
+   update_columns(reset_digest: User.digest(reset_token), reset_sent_at: Time.zone.now)
+  end
+
+  # パスワード再設定のメールを送信する
+  def send_password_reset_email
+    UserMailer.password_reset(self).deliver_now
+  end
+
+  # パスワード再設定の期限が切れている場合はtrueを返す
+  def password_reset_expired?
+    # パスワード再設定メールの送信時刻が、現在時刻より2時間より前（早い）の場合
+    reset_sent_at < 2.hours.ago
+  end
 
   private
 

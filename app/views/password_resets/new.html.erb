@@ -1,0 +1,16 @@
+<% provide(:title, "Forgot password") %>
+<h1>Forgot password</h1>
+
+<div class="row">
+  <div class="col-md-6 col-md-offset-3">
+  <%# ここも特に、該当するモデルのインスタンスはないので、scopeでリソースの名前とそれに対応するURLを具体的に指定
+      scopeを設定することで、例えば、params[:password_reset][:email]となり、リセットの際に送信されたemailの値を取得できる %>
+    <%= form_with(url: password_resets_path, scope: :password_reset,
+                    local: true) do |f| %>
+      <%= f.label :email %>
+      <%= f.email_field :email, class: 'form-control' %>
+
+      <%= f.submit "Submit", class: "btn btn-primary" %>
+    <% end %>
+  </div>
+</div>
