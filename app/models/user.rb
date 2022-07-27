@@ -1,9 +1,12 @@
 class User < ApplicationRecord
+  # 実際にDBにはない、仮の属性の読み取りと書き込みをするときによく使う ※DB関係なく使うこともある
   # remember_token属性をUserクラスに定義
-  attr_accessor :remember_token
+  attr_accessor :remember_token, :activation_token
+  before_save   :downcase_email
+  before_create :create_activation_digest
+  
   # Userクラスのインスタンのsaveの直前に現在のユーザーのemailにemailを小文字にしたものを代入
-  # Userモデルの中ではself.email = self.email.downcaseの右側のselfは省略できる
-  before_save { email.downcase! }
+ 
   validates :name,  presence: true, length: { maximum: 50 }
   
   # 定数VALID_EMAIL_REGEXにメールアドレスのフォーマットを検証するための正規表現を代入
@@ -64,4 +67,57 @@ class User < ApplicationRecord
   def forget
     update_attribute(:remember_digest, nil)
   end
+
+  # トークンがダイジェストと一致したらtrueを返す
+  # def authenticated?(remember_token)
+  #   digest = self.send("remember_digest")
+  #   return false if digest.nil?
+  #   BCrypt::Password.new(digest).is_password?(remember_token)
+  # end
+  # ↑これが↓こうなる
+  # 2番目の引数tokenの名前を変更して一般化し、他の認証でも使えるようにしている
+  # def authenticated?(attribute, token)
+  #   digest = self.send("#{attribute}_digest")
+  #   return false if digest.nil?
+  #   BCrypt::Password.new(digest).is_password?(token)
+  # end
+  # モデル内にあるのでselfは省略できるため↑これが↓こうなる
+  # user.authenticated?(:remember, remember_token)で以下のメソッドが呼び出せる
+  # attributeの引数に与えられた内容によって、呼び出すメソッドを変更している
+  # authenticated?(:remember, '')で呼び出すと、remember_digestメソッドを呼び、
+  # authenticated?(:activation, '')で呼び出すと、activation_digestメソッドを呼び出し
+  def authenticated?(attribute, token)
+    digest = send("#{attribute}_digest")
+    return false if digest.nil?
+    BCrypt::Password.new(digest).is_password?(token)
+  end
+
+  # アカウントを有効にする
+  def activate
+     # userのactivatedの値をtrueに、activated_atの値を現在時刻で上書き
+     update_columns(activated: true, activated_at: Time.zone.now)
+  end
+
+  # 有効化用のメールを送信する
+  def send_activation_email
+    # UserMailerの引数に@userを定義したaccount_activationメソッドで今すぐメールを送信
+    # selfは、@userのこと
+    UserMailer.account_activation(self).deliver_now
+  end
+  
+
+  private
+
+    # メールアドレスをすべて小文字にする
+    def downcase_email
+      # Userモデルの中ではself.email = self.email.downcaseの右側のselfは省略できる
+      # self.email = email.downcaseはさらに省略可
+      self.email.downcase!
+    end
+
+    # 有効化トークンとダイジェストを作成および代入する
+    def create_activation_digest
+      self.activation_token  = User.new_token
+      self.activation_digest = User.digest(activation_token)
+    end
 end

@@ -21,7 +21,7 @@ module SessionsHelper
     elsif (user_id = cookies.encrypted[:user_id])
       user = User.find_by(id: user_id)
        # もし、「userが存在する」かつ「cookieが持つトークンがダイジェストと一致する」場合
-      if user && user.authenticated?(cookies[:remember_token])
+       if user && user.authenticated?(:remember, cookies[:remember_token])
         log_in user
         @current_user = user
       end

@@ -9,4 +9,7 @@ Rails.application.routes.draw do
   post   '/login',   to: 'sessions#create'
   delete '/logout',  to: 'sessions#destroy'
   resources :users
+  # 本来、認証はすでにDBにあるデータを扱うため、PATCHリクエストとupdateアクションになるべき
+  # editアクションである理由は、有効化リンクをメールでクリックした時にブラウザから発行されるのは、GETリクエストになるため
+  resources :account_activations, only: [:edit]
 end

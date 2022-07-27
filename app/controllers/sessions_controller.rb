@@ -8,6 +8,8 @@ class SessionsController < ApplicationController
     # かつ「入力されたパスワードがそのユーザーのパスワードである」場合のみ、if文がtrueになる
     # user && user.authenticate(params[:session][:password])の省略系
     if @user&.authenticate(params[:session][:password])
+      # ユーザーが有効化されていれば
+      if @user.activated?
       # ユーザーログイン後にユーザー情報のページにリダイレクトする
       log_in @user
       # params[:session][:remember_me]が1の時userを記憶そうでなければuserを忘れるメソッドを呼び出す
@@ -22,9 +24,15 @@ class SessionsController < ApplicationController
       #「redirect_to user」は、「redirect_to user_url(user)」と同意
       #SessionsHelperで定義したredirect_back_orメソッドを呼び出してリダイレクト先を定義
       redirect_back_or @user
+      else
+        #flash.now のメッセージはその後リクエストが発生したときに消滅する
+        #flash[:hoge] のメッセージはその後リクエストが発生しても消滅しない
+        message  = "Account not activated. "
+        message += "Check your email for the activation link."
+        flash[:warning] = message
+        render 'new'
+      end
     else
-      #flash.now のメッセージはその後リクエストが発生したときに消滅する
-      #flash[:hoge] のメッセージはその後リクエストが発生しても消滅しない
       flash.now[:danger] = 'Invalid email/password combination'
       render 'new'
     end

@@ -4,11 +4,14 @@ class UsersController < ApplicationController
   before_action :admin_user,     only: :destroy
 
   def index
-    @users = User.paginate(page: params[:page])
+    # Usersテーブルからactivated:がtrueのデータをすべて取り出してpaginate(page: params[:page])する
+    @users = User.where(activated: true).paginate(page: params[:page])
   end
 
   def show
     @user = User.find(params[:id])
+    # @userが有効ではない場合、root_urlにリダイレクトさせる
+    redirect_to root_url and return unless @user.activated?
   end
 
   def new
@@ -18,12 +21,15 @@ class UsersController < ApplicationController
   def create
     @user = User.new(user_params)
     if @user.save
-      flash[:success] = "Welcome to the Sample App!"
-      # sessions_helperで定義したlog_inメソッド
-      log_in @user
-      # edirect_to @userというコードから（Railsエンジニアが）user_url(@user)といったコードを
-      # 実行したいということを、Railsが推察してくれた結果になる
-      redirect_to @user
+      @user.send_activation_email
+      flash[:info] = "Please check your email to activate your account."
+      redirect_to root_url
+      # flash[:success] = "Welcome to the Sample App!"
+      # # sessions_helperで定義したlog_inメソッド
+      # log_in @user
+      # # edirect_to @userというコードから（Railsエンジニアが）user_url(@user)といったコードを
+      # # 実行したいということを、Railsが推察してくれた結果になる
+      # redirect_to @user
     else
       render 'new'
     end

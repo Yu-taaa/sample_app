@@ -1,0 +1,24 @@
+<h1>Sample App</h1>
+
+<p>Hi <%= @user.name %>,</p>
+
+<p>
+Welcome to the Sample App! Click on the link below to activate your account:
+</p>
+
+<%= link_to "Activate", edit_account_activation_url(@user.activation_token,
+                                                    email: @user.email) %>
+
+<%# 認証リンクには、Railsサーバーでユーザーをメールアドレスで検索して有効化トークンを認証できるようにするため、
+リンクにはメールアドレスとトークンを両方含めておく必要
+
+↓このコードを考える
+edit_account_activation_url(@user.activation_token, ...)
+ 
+#このメソッドは
+edit_user_url(user)
+#↓このURLを生成
+http://www.example.com/users/1/edit
+#これに対応するアカウント有効化リンクのベースURLは↓
+#ランダム文字列はnew_tokenメソッドで生成されたもの
+http://www.example.com/account_activations/生成されたトークン/edit %>

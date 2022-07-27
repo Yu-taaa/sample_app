@@ -2,6 +2,11 @@ require 'test_helper'
 
 class UsersSignupTest < ActionDispatch::IntegrationTest
 
+  def setup
+    # 配信されるメッセージを初期化（配列deliveriesを空にする）
+    ActionMailer::Base.deliveries.clear
+  end
+
   test "invalid signup information" do
     # ユーザー登録ページにアクセス
     get signup_path
@@ -21,7 +26,8 @@ class UsersSignupTest < ActionDispatch::IntegrationTest
     assert_select 'div.alert-danger'
   end
 
-  test "valid signup information" do
+  # valid signup informationテストに機能追加
+  test "valid signup information with account activation" do
     get signup_path
     # 第一引数に文字列（'User.count'）を取り、assert_differenceブロック内の処理を実行する直前と、実行した直後のUser.countの値を比較
     # 第二引数の「1」は、 比較した結果の差異（今回の場合は1）を渡す
@@ -31,12 +37,33 @@ class UsersSignupTest < ActionDispatch::IntegrationTest
                                          password:              "password",
                                          password_confirmation: "password" } }
     end
-    # POSTリクエストを送信した結果を見て、指定されたリダイレクト先に移動するメソッド
-    follow_redirect!
-    assert_template 'users/show'
-    # falseである → flashが空っぽか
-    assert_not flash.empty?
-    # テストユーザーがサインアップ後にログインしている
-    assert is_logged_in?
+   # 引数の値が等しい１とActionMailer::Base.deliveriesに格納された配列の数
+   assert_equal 1, ActionMailer::Base.deliveries.size
+   # userに@userを代入（通常統合テストからはアクセスできないattr_accessorで定義した属性の値にもアクセスできるようになる）
+   user = assigns(:user)
+   # userが有効ではない
+   assert_not user.activated?
+   # 有効化していない状態でログインしてみる
+   log_in_as(user)
+   # テストユーザーがログインしていない
+   assert_not is_logged_in?
+   # 有効化トークンが不正な場合
+   get edit_account_activation_path("invalid token", email: user.email)
+   # テストユーザーがログインしていない
+   assert_not is_logged_in?
+   # トークンは正しいがメールアドレスが無効な場合
+   get edit_account_activation_path(user.activation_token, email: 'wrong')
+   # テストユーザーがログインしていない
+   assert_not is_logged_in?
+   # 有効化トークンが正しい場合
+   get edit_account_activation_path(user.activation_token, email: user.email)
+   # userの値を再取得すると有効化している
+   assert user.reload.activated?
+   # 実際にリダイレクト先に移動
+   follow_redirect!
+   #sers/showが描写される
+   assert_template 'users/show'
+   #テストユーザーがログインしている
+   assert is_logged_in?
   end
 end
