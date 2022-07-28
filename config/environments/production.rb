@@ -14,6 +14,10 @@ Rails.application.configure do
     :authentication => :plain,
   }
 
+  # アップロードされたファイルをAWSに保存する
+  # :amazonは、storage.ymlで設定したもの
+  config.active_storage.service = :amazon
+
   # Code is not reloaded between requests.
   config.cache_classes = true
 

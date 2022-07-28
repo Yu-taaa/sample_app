@@ -1,7 +1,7 @@
 <%# Railsは、form_with(@user)を使ってフォームを構成すると、@user.new_record?がtrueのときにはPOST（新規）を、falseのときにはPATCH（編集）を使う %>
 <%# Active Recordのnew_record?論理値メソッドを使って区別できる %>
 <%= form_with(model: @user, local: true) do |f| %>
-  <%= render 'shared/error_messages', object: @user %>
+  <%= render 'shared/error_messages', object: f.object %>
 
   <%= f.label :name %>
   <%= f.text_field :name, class: 'form-control' %>

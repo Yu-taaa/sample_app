@@ -1,0 +1,5 @@
+<%= link_to gravatar_for(current_user, size: 50), current_user %>
+<h1><%= current_user.name %></h1>
+<span><%= link_to "view my profile", current_user %></span>
+<%# 英文法上の誤りをなくすため、pluralizeメソッドを使って “1 micropost” や “2 microposts” と表示するように調整している %>
+<span><%= pluralize(current_user.microposts.count, "micropost") %></span>

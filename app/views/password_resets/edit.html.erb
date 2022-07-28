@@ -5,7 +5,7 @@
   <div class="col-md-6 col-md-offset-3">
     <%= form_with(model: @user, url: password_reset_path(params[:id]),
                   local: true) do |f| %>
-      <%= render 'shared/error_messages' %>
+      <%= render 'shared/error_messages', object: f.object %>
       <%# 再設定を実行するためのフォームにはパスワード入力フィールドと確認用フィールドしか作っていない為
           隠しフィールドを作ってメールアドレスを保存
           フォームの情報を送信するときにメールアドレスの情報も一緒に送信できる

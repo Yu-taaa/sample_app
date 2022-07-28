@@ -1,0 +1,13 @@
+<% if @feed_items.any? %>
+  <ol class="microposts">
+  <%# @feed_itemsにはcurrent_userに紐付いたfeed（該当のuser_idと合致するMicropostクラスのインスタンス）のpaginate(page: params[:page])が代入
+      Railsは対応する名前のパーシャルを、渡されたリソースのディレクトリ内から探しにいくことができる
+      今回は、（app/views/microposts/_micropost.html.erb）を呼び出せる %>
+    <%= render @feed_items %>
+  </ol>
+ <%# ↓の記述、別にstatic_pagesコントローラのhomeアクションから持ってきた@feed_itemsだから
+ URLは「/microposts?page=2」とならなくないか？（実際ならずにhomeアクション動作する）
+ つまり、paramsで明示的に渡さなくて良くないか？ %>
+ <%= will_paginate @feed_items,
+                    params: { controller: :static_pages, action: :home } %>
+<% end %>

@@ -15,4 +15,5 @@ Rails.application.routes.draw do
   # editアクションである理由は、有効化リンクをメールでクリックした時にブラウザから発行されるのは、GETリクエストになるため
   resources :account_activations, only: [:edit]
   resources :password_resets,     only: [:new, :create, :edit, :update]
+  resources :microposts,          only: [:create, :destroy]
 end

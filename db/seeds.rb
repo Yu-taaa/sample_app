@@ -27,3 +27,11 @@ User.create!(name:  name,
     activated: true,
     activated_at: Time.zone.now)
 end
+
+#ユーザーの一部を対象にマイクロポストを生成する
+# usersにUserモデルを created_atの順に並び替えて上から（6個を）配列として代入
+users = User.order(:created_at).take(6)
+50.times do
+  content = Faker::Lorem.sentence(word_count: 5)
+  users.each { |user| user.microposts.create!(content: content) }
+end

@@ -1,4 +1,5 @@
 class User < ApplicationRecord
+  has_many :microposts, dependent: :destroy
   # 実際にDBにはない、仮の属性の読み取りと書き込みをするときによく使う ※DB関係なく使うこともある
   # remember_token属性をUserクラスに定義
   attr_accessor :remember_token, :activation_token, :reset_token
@@ -122,6 +123,12 @@ class User < ApplicationRecord
   def password_reset_expired?
     # パスワード再設定メールの送信時刻が、現在時刻より2時間より前（早い）の場合
     reset_sent_at < 2.hours.ago
+  end
+  
+  # 試作feedの定義
+  # 完全な実装は次章の「ユーザーをフォローする」を参照
+  def feed
+    Micropost.where("user_id = ?", id)
   end
 
   private
