@@ -1,0 +1,5 @@
+<!--（_follow_form.html.erb内の）id="follow_form"にHTMLを挿入→render('users/unfollow')-->
+<!-- escape_javascriptは、javascriptの改行やシングルおよびダブルクォートをエスケープ-->
+$("#follow_form").html("<%= escape_javascript(render('users/unfollow')) %>");
+<!--（_stats.html.erb内の）id="followers"の中にHTMLを挿入→<%= @user.followers.count %>-->
+$("#followers").html('<%= @user.followers.count %>');

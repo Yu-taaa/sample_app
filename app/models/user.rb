@@ -1,5 +1,25 @@
 class User < ApplicationRecord
   has_many :microposts, dependent: :destroy
+  
+  # Userモデルと:active_relationshipsはhas_many (1対多) の関係性がある
+  # クラスはRelationship、外部キーはfollower_id、（ユーザーが削除された時）紐づいているactive_relationshipsも削除される
+  has_many :active_relationships,  class_name:  "Relationship",
+                                   foreign_key: "follower_id",
+                                   dependent:   :destroy
+  
+  has_many :passive_relationships, class_name:  "Relationship",
+                                   foreign_key: "followed_id",
+                                   dependent:   :destroy
+
+  # Userとfollowingはactive_relationshipsを介して多対多の関係を持っている
+  # 本来は、has_many :followeds, through: :active_relationships としたい
+  #「followeds」というシンボル名を「followed」という単数形に変えて、 relationshipsテーブルのfollowed_idを使って対象のユーザーを取得する働きを持つ
+  #「user.followeds」は英語として不適切なので「user.following」という名前を使いたい
+  # :sourceパラメーター を使うと明示的に「following配列の元はfollowed_idの集合である」と伝えられる
+  has_many :following, through: :active_relationships, source: :followed
+  # :followers属性の場合、Railsが「followers」を単数形にして自動的に外部キーfollower_idを探してくれるからsourceは省略してもいい
+  has_many :followers, through: :passive_relationships, source: :follower
+
   # 実際にDBにはない、仮の属性の読み取りと書き込みをするときによく使う ※DB関係なく使うこともある
   # remember_token属性をUserクラスに定義
   attr_accessor :remember_token, :activation_token, :reset_token
@@ -130,6 +150,47 @@ class User < ApplicationRecord
   def feed
     Micropost.where("user_id = ?", id)
   end
+
+  # ユーザーをフォローする
+  def follow(other_user)
+    # followingの最後にother_userを追加
+    following << other_user
+  end
+ 
+  # ユーザーをフォロー解除する
+  def unfollow(other_user)
+    # active_relationshipsからfollowed_idがother_user.idのデータを取得して削除
+    active_relationships.find_by(followed_id: other_user.id).destroy
+  end
+
+  # ユーザーのステータスフィードを返す
+  def feed
+    # Micropostsテーブルから取得条件 → user_idに、フォローしているユーザーのidか現在のユーザーのidを持つもの
+    # IN を使うとidの集合の内容（今回で言えば、following_idsの配列）を条件に指定できる
+    # Micropost.where("user_id IN (?) OR user_id = ?", following_ids, id)
+    # ↑ だと、following_idsでフォローしている全てのユーザーを発行し、その上で条件にかけているので再度、SQLを発行している？から非効率
+  
+    # DBでサブセレクトを利用して、following_idsをSQLに置き換えるとこうなる
+    # SELECT * FROM microposts
+    # WHERE user_id IN (SELECT followed_id FROM relationships
+    #               WHERE  follower_id = :user_id)
+    #   OR user_id = :user_id
+    # IN （「:user_id == 1 のユーザー（1は例）がフォローしているユーザーすべてを選択する」）の内包ロジック（↑の（）の部分）を
+    # 既存のSQLにネストさせることで、RailsではなくDB側に処理を一任させれる→効率的
+    following_ids = "SELECT followed_id FROM relationships
+                     WHERE follower_id = :user_id"
+    
+    # サブセレクトを利用して内包させたSQLの条件が以下になる
+    Micropost.where("user_id IN (#{following_ids})
+                     OR user_id = :user_id", user_id: id)
+  end
+ 
+  # 現在のユーザーがフォローしてたらtrueを返す
+  def following?(other_user)
+    # followingにother_userが含まれているか
+    following.include?(other_user)
+  end
+
 
   private
 

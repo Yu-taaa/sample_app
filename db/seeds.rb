@@ -35,3 +35,19 @@ users = User.order(:created_at).take(6)
   content = Faker::Lorem.sentence(word_count: 5)
   users.each { |user| user.microposts.create!(content: content) }
 end
+
+# リレーションシップのサンプルを追加
+# usersにすべてのユーザーを代入
+users = User.all
+# userにUserテーブルの1番目のユーザーを代入
+user  = users.first
+# followingにusersの3番目～51番目を代入
+following = users[2..50]
+# followersにusersの4番目～41番目を代入
+followers = users[3..40]
+# followingを順に取り出してブロック内を実行
+# 取り出した要素をfollowedに代入 userがfollowedをフォロー
+following.each { |followed| user.follow(followed) }
+# followersを順に取り出してブロック内を実行
+# 取り出した要素をfollowerに代入 followerがユーザーをフォロー
+followers.each { |follower| follower.follow(user) }

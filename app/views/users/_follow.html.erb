@@ -1,0 +1,7 @@
+<!--current_user（ログイン中のユーザー）と結び付けた新し<!--current_user（ログイン中のユーザー）と結び付けた新しいRelationshipオブジェクトを返すフォーム-->
+<!--Ajaxを採用 → local: true → local: false -->
+<%= form_with(model: current_user.active_relationships.build, local: false) do |f| %>
+  <!--followed_idに@user.idを渡す-->
+  <div><%= hidden_field_tag :followed_id, @user.id %></div>
+  <%= f.submit "Follow", class: "btn btn-primary" %>
+<% end %>
